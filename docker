@@ -1,0 +1,121 @@
+#cudagl Docker:
+
+docker pull nvidia/cudagl:10.2-devel-ubuntu18.04
+
+docker run --rm -it nvidia/cudagl:10.2-devel-ubuntu18.04 /bin/bash
+
+cd ~ && apt update
+
+apt upgrade
+
+apt install lsb-core vim gedit mesa-utils x11-apps curl libfuse2 gstreamer1.0-gl wget
+
+
+
+#ROS Melodic:
+
+sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list'
+
+apt-key adv --keyserver 'hkp://keyserver.ubuntu.com:80' --recv-key C1CF6E31E6BADE8868B172B4F42ED6FBAB17C654
+
+apt update
+
+apt install ros-melodic-desktop-full
+
+echo "source /opt/ros/melodic/setup.bash" >> ~/.bashrc && source ~/.bashrc
+
+apt install python-rosdep python-rosinstall python-rosinstall-generator python-wstool build-essential ros-melodic-catkin python-catkin-tools
+
+rosdep init
+
+rosdep update
+
+
+#Gazebo9:
+
+sh -c 'echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable `lsb_release -cs` main" > /etc/apt/sources.list.d/gazebo-stable.list'
+
+wget https://packages.osrfoundation.org/gazebo.key -O - | sudo apt-key add -
+
+apt update
+
+apt install gazebo9 libgazebo9-dev
+
+apt upgrade libignition-math2
+
+
+
+#Ardupilot SITL & MAVProxy:
+
+git clone https://github.com/ArduPilot/ardupilot.git
+
+cd ardupilot && git checkout Copter-3.6
+
+git submodule update --init --recursive
+
+apt install python-matplotlib python-serial python-wxgtk3.0 python-wxtools python-lxml python-scipy python-opencv ccache gawk python-pip python-pexpect
+
+pip install future pymavlink MAVProxy
+
+echo "export PATH=$PATH:$HOME/ardupilot/Tools/autotest" >> ~/.bashrc
+
+echo "export PATH=/usr/lib/ccache:$PATH" >> ~/.bashrc && source ~/.bashrc
+
+cd ArduCopter &&  ./../Tools/autotest/sim_vehicle.py -w
+
+
+
+#Plugin for APM:
+
+cd ~ && git clone https://github.com/khancyr/ardupilot_gazebo.git && cd ardupilot_gazebo && git checkout dev
+
+mkdir build && cd build && cmake ..
+
+make -j4
+
+sudo make install
+
+
+
+#Mavlink & Mavros:
+
+mkdir -p ~/mav_ws/src && cd ~/mav_ws && catkin init && wstool init ~/mav_ws/src
+
+rosinstall_generator --upstream mavros | tee /tmp/mavros.rosinstall && rosinstall_generator mavlink | tee -a /tmp/mavros.rosinstall
+
+wstool merge -t src /tmp/mavros.rosinstall && wstool update -t src
+
+rosdep install --from-paths src --ignore-src --rosdistro `echo $ROS_DISTRO` -y
+
+catkin build
+
+echo "source ~/mav_ws/devel/setup.bash" >> ~/.bashrc && source ~/.bashrc
+
+~/mav_ws/src/mavros/mavros/scripts/install_geographiclib_datasets.sh
+
+
+
+#iq_tutorials:
+
+mkdir -p ~/iq_ws/src && cd ~/iq_ws/src
+
+git clone https://github.com/Intelligent-Quads/iq_gnc.git && git clone https://github.com/Intelligent-Quads/iq_sim.git
+
+cd ~/ iq_ws && catkin_make
+
+echo "source ~/iq_ws/devel/setup.bash" >> ~/.bashrc && source ~/.bashrc
+
+cp ~/iq_ws/src/iq_sim/scripts/startsitl.sh ~
+
+
+
+Sublimetext:
+
+wget -qO - https://download.sublimetext.com/sublimehq-pub.gpg | sudo apt-key add -
+
+echo "deb https://download.sublimetext.com/ apt/stable/" | sudo tee /etc/apt/sources.list.d/sublime-text.list
+
+apt update
+
+apt install sublime-text
+
